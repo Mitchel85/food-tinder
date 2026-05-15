@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Königliches Menü-Tinder</title>
+    <style>
+        :root {
+            --bg-color: #2b003b;
+            --text-color: #fff;
+            --accent-pink: #ff66b2;
+            --accent-gold: #ffd700;
+            --swipe-left: #ff4d4d;
+            --swipe-right: #00cc66;
+        }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            background: linear-gradient(135deg, var(--bg-color), #4a0e4e);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            text-align: center;
+            overflow: hidden; /* Verhindert Scrollen beim Swipen */
+        }
+        
+        /* Animierter Sternen-Hintergrund */
+        .stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: -1;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat; background-size: 200px 200px;
+            animation: twinkle 4s infinite linear;
+        }
+        @keyframes twinkle { 0% {opacity:0.5;} 50% {opacity:1;} 100% {opacity:0.5;} }
+
+        h1 { margin: 10px 0; font-size: 2em; color: var(--accent-gold); text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .subtitle { font-size: 1em; color: #ffb3d9; margin-bottom: 20px; }
+
+        /* Tinder-Karten Bereich */
+        .tinder-container {
+            position: relative;
+            width: 100%;
+            max-width: 350px;
+            height: 350px;
+            margin-top: 20px;
+            perspective: 1000px;
+        }
+
+        .tinder-card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 3px solid var(--accent-gold);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255, 102, 178, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            cursor: grab;
+            touch-action: none; /* WICHTIG für Touch-Geräte */
+            transform-origin: 50% 100%;
+            will-change: transform;
+        }
+        .tinder-card:active { cursor: grabbing; }
+
+        .meal-text {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+
+        /* Stempel für Feedback */
+        .stamp {
+            position: absolute;
+            top: 40px;
+            padding: 10px 20px;
+            border: 5px solid;
+            border-radius: 10px;
+            font-size: 2em;
+            font-weight: bold;
+            text-transform: uppercase;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .stamp-nope { color: var(--swipe-left); border-color: var(--swipe-left); right: 20px; transform: rotate(15deg); }
+        .stamp-like { color: var(--swipe-right); border-color: var(--swipe-right); left: 20px; transform: rotate(-15deg); }
+
+        /* Match Screen */
+        #match-screen {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(43, 0, 59, 0.95);
+            z-index: 100;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #match-screen h2 { color: var(--accent-pink); font-size: 2em; }
+        #match-meal { font-size: 3em; color: var(--accent-gold); margin: 20px 0; text-shadow: 0 0 20px var(--accent-gold); }
+        .btn {
+            background: linear-gradient(45deg, var(--accent-pink), #ff3385);
+            color: #fff; border: 2px solid var(--accent-gold); padding: 15px 30px;
+            font-size: 1.3em; font-weight: bold; border-radius: 30px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 102, 178, 0.5); margin-top: 30px;
+        }
+
+        /* Kochbuch / Einstellungen unten */
+        .settings-area {
+            width: 100%; max-width: 400px; margin-top: auto; padding-bottom: 20px; z-index: 10;
+        }
+        .toggle-btn {
+            color: var(--accent-gold); text-decoration: underline; cursor: pointer; font-size: 1.1em;
+            background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; display: inline-block;
+        }
+        #settings-panel {
+            display: none; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 15px;
+            border: 1px solid var(--accent-pink); margin-top: 10px; text-align: left;
+        }
+        input[type="text"] {
+            width: calc(100% - 90px); padding: 10px; border-radius: 8px; border: none; font-size: 1em;
+        }
+        .add-btn { width: 80px; padding: 10px; background: var(--accent-gold); border: none; border-radius: 8px; font-weight: bold; cursor: pointer;}
+        ul { list-style: none; padding: 0; max-height: 150px; overflow-y: auto; margin-top: 15px; }
+        li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,102,178,0.3); font-size: 0.9em; }
+        .del-btn { background: #ff4d4d; color: white; border: none; border-radius: 5px; cursor: pointer; padding: 3px 8px; }
+        
+        /* Scrollbar für Liste */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-pink); border-radius: 10px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+
+    <h1>👑 Food-Tinder ✨</h1>
+    <div class="subtitle">Wisch nach Rechts für LECKER!</div>
+
+    <div class="tinder-container" id="tinder-container">
+        </div>
+
+    <div id="match-screen">
+        <h2>✨ IT'S A MATCH! ✨</h2>
+        <div id="match-meal"></div>
+        <button class="btn" onclick="resetApp()">Neues Spiel</button>
+    </div>
+
+    <div class="settings-area">
+        <div class="toggle-btn" onclick="toggleSettings()">📖 Königliches Kochbuch bearbeiten</div>
+        <div id="settings-panel">
+            <div>
+                <input type="text" id="newMealInput" placeholder="Neues Essen...">
+                <button class="add-btn" onclick="addMeal()">Neu</button>
+            </div>
+            <ul id="list-container"></ul>
+        </div>
+    </div>
+
+    <script>
+        const defaultMeals = [
+            "Polofinos", "Taccos", "Gemüsesuppe", "Frikassee mit Reis", 
+            "Kassler mit Kartoffelklößen, Sauerkraut", "Bratwurst mit Sauerkraut", 
+            "Pellkartoffeln mit Quark", "Spätzle-Pfanne", "Dino Nuggets mit Püree", 
+            "Gebratener Reis mit Hühnchen", "Wraps", "Tortellini", 
+            "Ramennudeln mit Ei", "Schupfnudeln mit Geschnetzeltem", 
+            "Pizza", "Gespenstersuppe", "Nudelauflauf", "Gefüllte Paprika", 
+            "Spagetti mit Tomatensauce", "Spagetti Bolognese", 
+            "Nudeln mit Gulasch", "Lachs mit Reis", "Rührei mit Spinat", 
+            "Spiegelei mit Bratkartoffeln", "Grießbrei", "Hähnchenschenkel", 
+            "Hefeklöße", "Nudeln mit Lachs", "Fischstäbchen mit Püree", 
+            "Linsensuppe", "Bohnensuppe mit Eierkuchen", "Wikingertopf"
+        ];
+
+        let meals = JSON.parse(localStorage.getItem('princessMeals')) || [...defaultMeals];
+        let currentMeal = "";
+        
+        const container = document.getElementById('tinder-container');
+
+        // --- TINDER LOGIK ---
+        function createCard() {
+            container.innerHTML = ''; // Alte Karte löschen
+            
+            if(meals.length === 0) {
+                container.innerHTML = '<div class="tinder-card"><div class="meal-text">Kochbuch ist leer!</div></div>';
+                return;
+            }
+
+            // Zufälliges Gericht
+            currentMeal = meals[Math.floor(Math.random() * meals.length)];
+
+            const card = document.createElement('div');
+            card.className = 'tinder-card';
+            card.innerHTML = `
+                <div class="stamp stamp-nope" id="stamp-nope">NÄÄÄ!</div>
+                <div class="stamp stamp-like" id="stamp-like">LECKER!</div>
+                <div class="meal-text">${currentMeal}</div>
+            `;
+            container.appendChild(card);
+
+            initSwipe(card);
+        }
+
+        function initSwipe(card) {
+            let startX = 0, currentX = 0, isDragging = false;
+            const stampNope = card.querySelector('#stamp-nope');
+            const stampLike = card.querySelector('#stamp-like');
+            const threshold = 100; // Wie weit muss gewischt werden
+
+            // Pointer Events (Touch & Maus)
+            card.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                card.style.transition = 'none'; // Keine Verzögerung beim Ziehen
+            });
+
+            document.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                currentX = e.clientX - startX;
+                
+                // Karte rotieren und verschieben
+                const rotate = currentX * 0.05;
+                card.style.transform = `translate(${currentX}px, 0) rotate(${rotate}deg)`;
+
+                // Stempel-Opazität anpassen
+                stampLike.style.opacity = currentX > 20 ? currentX / 100 : 0;
+                stampNope.style.opacity = currentX < -20 ? Math.abs(currentX) / 100 : 0;
+            });
+
+            document.addEventListener('pointerup', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+
+                if (currentX > threshold) {
+                    // Swipe Rechts (Match)
+                    card.style.transition = 'transform 0.4s ease-out';
+                    card.style.transform = `translate(${window.innerWidth}px, 0) rotate(30deg)`;
+                    setTimeout(showMatch, 300);
+                } else if (currentX < -threshold) {
+                    // Swipe Links (Neues Gericht)
+                    card.style.transition = 'transform 0.4s ease-out';
+                    card.style.transform = `translate(-${window.innerWidth}px, 0) rotate(-30deg)`;
+                    setTimeout(createCard, 300); // Neue Karte laden
+                } else {
+                    // Zurück in die Mitte schnappen
+                    card.style.transition = 'transform 0.3s ease-out';
+                    card.style.transform = 'translate(0px, 0px) rotate(0deg)';
+                    stampLike.style.opacity = 0;
+                    stampNope.style.opacity = 0;
+                }
+                currentX = 0; // Reset
+            });
+        }
+
+        function showMatch() {
+            document.getElementById('match-meal').innerText = currentMeal;
+            document.getElementById('match-screen').style.display = 'flex';
+        }
+
+        function resetApp() {
+            document.getElementById('match-screen').style.display = 'none';
+            createCard();
+        }
+
+        // --- KOCHBUCH EINSTELLUNGEN LOGIK ---
+        function saveMeals() {
+            localStorage.setItem('princessMeals', JSON.stringify(meals));
+            renderList();
+        }
+
+        function renderList() {
+            const listContainer = document.getElementById('list-container');
+            listContainer.innerHTML = '';
+            meals.forEach((meal, index) => {
+                let li = document.createElement('li');
+                li.innerHTML = `<span>${meal}</span> <button class="del-btn" onclick="removeMeal(${index})">❌</button>`;
+                listContainer.appendChild(li);
+            });
+        }
+
+        function addMeal() {
+            const input = document.getElementById('newMealInput');
+            const newMeal = input.value.trim();
+            if (newMeal !== '') {
+                meals.push(newMeal);
+                saveMeals();
+                input.value = '';
+            }
+        }
+
+        function removeMeal(index) {
+            meals.splice(index, 1);
+            saveMeals();
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            panel.style.display = panel.style.display === "block" ? "none" : "block";
+        }
+
+        // Start!
+        renderList();
+        createCard();
+    </script>
+</body>
+</html>
