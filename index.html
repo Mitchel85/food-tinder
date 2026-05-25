@@ -26,6 +26,8 @@
             text-align: center;
             overflow: hidden;
         }
+        /* Inside HA iframe → space for view tabs */
+        body.embedded { padding-top: 60px; }
         .stars {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: -1;
@@ -444,6 +446,10 @@
         }
 
         // Start!
+        // Detect if embedded in iframe (e.g. Home Assistant) → add padding for nav bar
+        if (window.self !== window.top) {
+            document.body.classList.add('embedded');
+        }
         renderList();
         createCard();
     </script>
