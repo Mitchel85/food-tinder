@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Königliches Menü-Tinder</title>
+    <title>🍳 Königliches Menü-Tinder</title>
     <style>
         :root {
             --bg-color: #2b003b;
@@ -13,6 +13,7 @@
             --swipe-left: #ff4d4d;
             --swipe-right: #00cc66;
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
             background: linear-gradient(135deg, var(--bg-color), #4a0e4e);
@@ -21,13 +22,10 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
             padding: 10px;
             text-align: center;
-            overflow: hidden; /* Verhindert Scrollen beim Swipen */
+            overflow: hidden;
         }
-        
-        /* Animierter Sternen-Hintergrund */
         .stars {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: -1;
@@ -42,140 +40,233 @@
         @keyframes twinkle { 0% {opacity:0.5;} 50% {opacity:1;} 100% {opacity:0.5;} }
 
         h1 { margin: 10px 0; font-size: 2em; color: var(--accent-gold); text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-        .subtitle { font-size: 1em; color: #ffb3d9; margin-bottom: 20px; }
+        .subtitle { font-size: 1em; color: #ffb3d9; margin-bottom: 15px; }
 
-        /* Tinder-Karten Bereich */
+        /* === TINDER SCREEN === */
+        #tinder-screen { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; }
         .tinder-container {
             position: relative;
             width: 100%;
-            max-width: 350px;
-            height: 350px;
-            margin-top: 20px;
-            perspective: 1000px;
+            height: 380px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
         }
-
         .tinder-card {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 3px solid var(--accent-gold);
+            width: 90%;
+            max-width: 400px;
+            height: 340px;
+            background: linear-gradient(145deg, #5c1a6e, #3d0f4a);
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255, 102, 178, 0.3);
+            border: 3px solid var(--accent-gold);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            box-sizing: border-box;
             cursor: grab;
-            touch-action: none; /* WICHTIG für Touch-Geräte */
-            transform-origin: 50% 100%;
-            will-change: transform;
+            user-select: none;
+            touch-action: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
-        .tinder-card:active { cursor: grabbing; }
-
         .meal-text {
             font-size: 1.8em;
             font-weight: bold;
-            color: #fff;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+            color: var(--accent-gold);
+            padding: 20px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
             pointer-events: none;
         }
-
-        /* Stempel für Feedback */
         .stamp {
             position: absolute;
-            top: 40px;
+            top: 30px;
+            font-size: 2.8em;
+            font-weight: 900;
             padding: 10px 20px;
             border: 5px solid;
-            border-radius: 10px;
-            font-size: 2em;
-            font-weight: bold;
-            text-transform: uppercase;
+            border-radius: 15px;
             opacity: 0;
             pointer-events: none;
+            text-transform: uppercase;
         }
         .stamp-nope { color: var(--swipe-left); border-color: var(--swipe-left); right: 20px; transform: rotate(15deg); }
         .stamp-like { color: var(--swipe-right); border-color: var(--swipe-right); left: 20px; transform: rotate(-15deg); }
 
-        /* Match Screen */
-        #match-screen {
+        .swipe-buttons {
+            display: flex;
+            gap: 40px;
+            margin-top: 10px;
+        }
+        .swipe-btn {
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            font-size: 2em;
+            border: 3px solid;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.3);
+            transition: transform 0.15s;
+        }
+        .swipe-btn:active { transform: scale(0.9); }
+        .btn-nope { border-color: var(--swipe-left); color: var(--swipe-left); }
+        .btn-like { border-color: var(--swipe-right); color: var(--swipe-right); }
+
+        /* === RECIPE SCREEN (after match) === */
+        #recipe-screen {
             display: none;
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(43, 0, 59, 0.95);
-            z-index: 100;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-            box-sizing: border-box;
+            width: 100%;
+            max-width: 500px;
+            max-height: calc(100vh - 20px);
+            overflow-y: auto;
+            padding: 15px;
         }
-        #match-screen h2 { color: var(--accent-pink); font-size: 2em; }
-        #match-meal { font-size: 3em; color: var(--accent-gold); margin: 20px 0; text-shadow: 0 0 20px var(--accent-gold); }
-        .btn {
+        #recipe-screen h2 {
+            color: var(--accent-gold);
+            font-size: 2em;
+            margin-bottom: 5px;
+            text-shadow: 0 0 15px var(--accent-gold);
+        }
+        #recipe-screen h3 {
+            color: var(--accent-pink);
+            font-size: 1.3em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-align: left;
+            width: 100%;
+        }
+        .ingredient-list {
+            list-style: none;
+            text-align: left;
+            width: 100%;
+            padding: 0;
+        }
+        .ingredient-list li {
+            padding: 6px 12px;
+            margin: 3px 0;
+            background: rgba(255,255,255,0.08);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-gold);
+        }
+        .instruction-list {
+            list-style: none;
+            text-align: left;
+            width: 100%;
+            padding: 0;
+            counter-reset: step;
+        }
+        .instruction-list li {
+            padding: 10px 12px 10px 45px;
+            margin: 5px 0;
+            background: rgba(255,255,255,0.08);
+            border-radius: 8px;
+            position: relative;
+            line-height: 1.4;
+        }
+        .instruction-list li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            width: 26px; height: 26px;
+            background: var(--accent-pink);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.85em;
+        }
+        .back-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
             background: linear-gradient(45deg, var(--accent-pink), #ff3385);
-            color: #fff; border: 2px solid var(--accent-gold); padding: 15px 30px;
-            font-size: 1.3em; font-weight: bold; border-radius: 30px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 102, 178, 0.5); margin-top: 30px;
+            color: #fff;
+            border: 2px solid var(--accent-gold);
+            border-radius: 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.15s;
         }
+        .back-btn:active { transform: scale(0.95); }
 
-        /* Kochbuch / Einstellungen unten */
-        .settings-area {
-            width: 100%; max-width: 400px; margin-top: auto; padding-bottom: 20px; z-index: 10;
-        }
-        .toggle-btn {
-            color: var(--accent-gold); text-decoration: underline; cursor: pointer; font-size: 1.1em;
-            background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; display: inline-block;
+        /* === SETTINGS === */
+        .settings-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            color: var(--accent-gold);
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9em;
+            z-index: 10;
         }
         #settings-panel {
-            display: none; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 15px;
-            border: 1px solid var(--accent-pink); margin-top: 10px; text-align: left;
+            display: none;
+            background: rgba(0,0,0,0.9);
+            border: 1px solid var(--accent-pink);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 10px;
+            width: 90%;
+            max-width: 400px;
+            text-align: left;
         }
-        input[type="text"] {
-            width: calc(100% - 90px); padding: 10px; border-radius: 8px; border: none; font-size: 1em;
+        #settings-panel input {
+            width: calc(100% - 80px);
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
         }
-        .add-btn { width: 80px; padding: 10px; background: var(--accent-gold); border: none; border-radius: 8px; font-weight: bold; cursor: pointer;}
-        ul { list-style: none; padding: 0; max-height: 150px; overflow-y: auto; margin-top: 15px; }
-        li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,102,178,0.3); font-size: 0.9em; }
-        .del-btn { background: #ff4d4d; color: white; border: none; border-radius: 5px; cursor: pointer; padding: 3px 8px; }
-        
-        /* Scrollbar für Liste */
+        .add-btn { width: 70px; padding: 8px; background: var(--accent-gold); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .del-btn { background: none; border: none; cursor: pointer; font-size: 1.2em; }
+        #list-container { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; margin-top: 10px; }
+        #list-container li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.2); }
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--accent-pink); border-radius: 10px; }
-
     </style>
 </head>
 <body>
-
     <div class="stars"></div>
+    
+    <span class="settings-toggle" onclick="toggleSettings()">⚙️ Kochbuch</span>
 
-    <h1>👑 Food-Tinder ✨</h1>
-    <div class="subtitle">Wisch nach Rechts für LECKER!</div>
-
-    <div class="tinder-container" id="tinder-container">
+    <!-- TINDER MODE -->
+    <div id="tinder-screen">
+        <h1>👑 Menü-Tinder</h1>
+        <p class="subtitle">Wische fürs nächste Gericht • Tippe für Zutaten & Rezept</p>
+        <div class="tinder-container" id="tinder-container"></div>
+        <div class="swipe-buttons">
+            <div class="swipe-btn btn-nope" onclick="swipeLeft()">👈</div>
+            <div class="swipe-btn btn-like" onclick="swipeRight()">❤️</div>
         </div>
-
-    <div id="match-screen">
-        <h2>✨ IT'S A MATCH! ✨</h2>
-        <div id="match-meal"></div>
-        <button class="btn" onclick="resetApp()">Neues Spiel</button>
-    </div>
-
-    <div class="settings-area">
-        <div class="toggle-btn" onclick="toggleSettings()">📖 Königliches Kochbuch bearbeiten</div>
         <div id="settings-panel">
-            <div>
-                <input type="text" id="newMealInput" placeholder="Neues Essen...">
-                <button class="add-btn" onclick="addMeal()">Neu</button>
-            </div>
+            <input type="text" id="newMealInput" placeholder="Neues Gericht...">
+            <button class="add-btn" onclick="addMeal()">Hinzufügen</button>
             <ul id="list-container"></ul>
         </div>
     </div>
 
+    <!-- RECIPE MODE (nach Match) -->
+    <div id="recipe-screen">
+        <h2 id="recipe-name"></h2>
+        <div id="recipe-ingredients-section">
+            <h3>🛒 Zutaten</h3>
+            <ul class="ingredient-list" id="recipe-ingredients"></ul>
+        </div>
+        <div id="recipe-instructions-section">
+            <h3>👨‍🍳 Zubereitung</h3>
+            <ol class="instruction-list" id="recipe-instructions"></ol>
+        </div>
+        <button class="back-btn" onclick="backToSwipe()">🔄 Weiter wischen!</button>
+    </div>
+
     <script>
+        // === REZEPTDATEN (aus Mealie-DB) ===
+        const recipes = {"Bohnensuppe mit Eierkuchen":{"ingredients":["250 g weiße Bohnen (getrocknet)","1 Bund Suppengrün","2 Kartoffeln","1 Zwiebel","1 EL Öl","1,5 l Gemüsebrühe","Salz, Pfeffer","2 Eier (für Eierkuchen)"],"instructions":["Bohnen über Nacht einweichen. Suppengrün und Kartoffeln würfeln.","Zwiebel in Öl andünsten, Bohnen und Brühe zugeben. 45 Min. köcheln.","Gemüse zugeben, weitere 20 Min. kochen. Mit Salz und Pfeffer abschmecken.","Aus Eiern und Milch dünne Eierkuchen backen, in Streifen schneiden und in die Suppe geben."]},"Bratwurst mit Sauerkraut":{"ingredients":["8 Bratwürste","1 Glas Sauerkraut","1 Zwiebel","1 EL Öl","1 TL Kümmel","1 Lorbeerblatt","Salz, Pfeffer","Senf"],"instructions":["Zwiebel würfeln, in Öl andünsten. Sauerkraut, Kümmel, Lorbeerblatt zugeben. 20 Min. schmoren.","Bratwürste in separater Pfanne rundum goldbraun braten.","Mit Senf servieren. Dazu Salzkartoffeln oder Brot."]},"Dino Nuggets mit Püree":{"ingredients":["1 Pck. Dino Nuggets (TK)","1 kg Kartoffeln","200 ml Milch","50 g Butter","Salz","Muskatnuss"],"instructions":["Kartoffeln schälen, würfeln, in Salzwasser 20 Min. kochen.","Dino Nuggets nach Packungsanweisung im Ofen backen.","Kartoffeln stampfen, mit heißer Milch und Butter cremig rühren. Salz + Muskat zugeben.","Nuggets mit Püree servieren."]},"Fischstäbchen mit Püree":{"ingredients":["12 Fischstäbchen (TK)","1 kg Kartoffeln","200 ml Milch","50 g Butter","Salz","Muskatnuss"],"instructions":["Kartoffeln schälen, würfeln, in Salzwasser 20 Min. kochen.","Fischstäbchen nach Packungsanweisung im Ofen backen.","Kartoffeln stampfen, mit heißer Milch und Butter cremig rühren. Salz + Muskat zugeben.","Fischstäbchen mit Püree servieren."]},"Frikassee mit Reis":{"ingredients":["500 g Hähnchenbrust","2 Karotten","1 Stange Lauch","200 g Champignons","50 g Butter","50 g Mehl","500 ml Hühnerbrühe","200 ml Sahne","1 Eigelb","Salz, Pfeffer","Zitronensaft"],"instructions":["Hähnchen in Würfel schneiden, in Butter anbraten. Herausnehmen.","Karotten, Lauch, Champignons im selben Topf andünsten. Mehl einrühren.","Mit Brühe ablöschen, aufkochen. Sahne zugeben, Hähnchen zurück. 15 Min. köcheln.","Eigelb mit etwas Sauce verrühren, einrühren. Mit Zitronensaft, Salz, Pfeffer abschmecken. Mit Reis servieren."]},"Gebratener Reis mit Hühnchen":{"ingredients":["300 g Basmatireis","400 g Hähnchenbrust","2 Eier","1 rote Paprika","150 g Erbsen (TK)","Sojasauce","Sesamöl","Salz, Pfeffer"],"instructions":["Reis kochen, am besten vom Vortag. Hähnchen würfeln, scharf anbraten.","Eier verquirlen, in Pfanne stocken lassen, zerkleinern.","Alles in Pfanne: Reis, Hähnchen, Paprika, Erbsen. Mit Sojasauce und Sesamöl würzen.","Heiß servieren."]},"Gefüllte Paprika":{"ingredients":["6 Paprikaschoten","500 g Hackfleisch (gemischt)","1 Zwiebel","1 Ei","100 g Reis (gekocht)","Salz, Pfeffer","Paprikapulver","500 ml Tomatenpassata"],"instructions":["Deckel der Paprika abschneiden, Kerne entfernen.","Hack mit gewürfelter Zwiebel, Ei, Reis mischen. Kräftig würzen.","Paprika füllen, in Auflaufform setzen. Passata drumherum gießen.","Bei 180°C ca. 40 Min. backen."]},"Gemüsesuppe":{"ingredients":["3 Karotten","2 Kartoffeln","1 Stange Lauch","1 Stück Sellerie","150 g Erbsen (TK)","1 Zwiebel","1 EL Öl","1,5 l Gemüsebrühe","Salz, Pfeffer","Muskatnuss"],"instructions":["Alles Gemüse würfeln. Zwiebel in Öl andünsten.","Restliches Gemüse zugeben, kurz anschwitzen. Brühe aufgießen.","20 Min. köcheln. Mit Salz, Pfeffer, Muskat abschmecken."]},"Gespenstersuppe":{"ingredients":["500 g weiße Bohnen (Dose)","1 Zwiebel","2 Knoblauchzehen","1 EL Olivenöl","750 ml Gemüsebrühe","200 ml Sahne","Salz, Pfeffer","Muskatnuss","Schnittlauch"],"instructions":["Zwiebel und Knoblauch in Öl andünsten.","Bohnen abgießen, zugeben. Brühe aufgießen, 15 Min. köcheln.","Pürieren, Sahne zugeben. Würzen.","Mit Schnittlauch servieren. Gruselig lecker!"]},"Grießbrei":{"ingredients":["1 l Milch","100 g Weichweizengrieß","4 EL Zucker","1 Pck. Vanillezucker","1 Prise Salz","Zimt & Zucker (zum Bestreuen)"],"instructions":["Milch mit Zucker, Vanillezucker und Salz aufkochen.","Grieß einrieseln lassen, unter Rühren 3 Min. köcheln.","In Schälchen füllen, erkalten lassen.","Mit Zimt & Zucker bestreuen."]},"Hefeklöße":{"ingredients":["500 g Mehl","1 Würfel Hefe","250 ml Milch","50 g Zucker","50 g Butter","1 Ei","1 Prise Salz","Vanillesauce"],"instructions":["Hefe in lauwarmer Milch auflösen. Mit Mehl, Zucker, Ei, Butter, Salz verkneten.","30 Min. gehen lassen. Klöße formen.","In leicht siedendem Wasser 15 Min. ziehen lassen.","Mit Vanillesauce servieren."]},"Hähnchenschenkel":{"ingredients":["8 Hähnchenschenkel","4 EL Öl","2 TL Paprikapulver","1 TL Knoblauchpulver","Salz, Pfeffer","Rosmarin"],"instructions":["Öl mit Gewürzen mischen, Schenkel einreiben.","Auf Backblech legen, bei 200°C ca. 40 Min. backen.","Nach der Hälfte wenden.","Mit Beilage servieren."]},"Kassler mit Kartoffelklößen, Sauerkraut":{"ingredients":["4 Scheiben Kassler (à 200 g)","1 Glas Sauerkraut (500 g)","1 Zwiebel","2 EL Butterschmalz","1 Apfel","1 TL Kümmel","200 ml Apfelsaft","Salz, Pfeffer","1 Pck. Kloßteig (Kühlregal)"],"instructions":["Zwiebel würfeln, Apfel raspeln. In Butterschmalz andünsten.","Sauerkraut, Kümmel und Apfelsaft zugeben. 20 Min. schmoren.","Kassler in Pfanne je Seite 3 Min. braten.","Klöße nach Packungsanweisung zubereiten. Alles zusammen servieren."]},"Lachs mit Reis":{"ingredients":["4 Lachsfilets","250 g Basmatireis","2 EL Zitronensaft","Dill","Salz, Pfeffer","Butter"],"instructions":["Reis kochen. Lachs mit Zitronensaft beträufeln, salzen, pfeffern.","Lachs in Butter je Seite 3 Min. braten.","Mit Dill bestreuen, mit Reis servieren."]},"Linsensuppe":{"ingredients":["250 g Linsen (braun)","2 Karotten","2 Kartoffeln","1 Stange Lauch","1 Zwiebel","100 g Speckwürfel","1 EL Öl","1,5 l Gemüsebrühe","2 Lorbeerblätter","Salz, Pfeffer","Essig"],"instructions":["Linsen waschen. Zwiebel, Speck in Öl andünsten.","Karotten, Kartoffeln, Lauch würfeln, zugeben.","Brühe, Linsen, Lorbeer zugeben. 30 Min. köcheln.","Mit Salz, Pfeffer, einem Schuss Essig abschmecken."]},"Nudelauflauf":{"ingredients":["500 g Nudeln (z.B. Fusilli)","400 g Hackfleisch","1 Zwiebel","1 Dose Tomaten (400 g)","200 g Schmand","200 g Käse (Gouda)","Salz, Pfeffer","Ital. Kräuter"],"instructions":["Nudeln al dente kochen. Hack mit Zwiebel anbraten, Tomaten zugeben, würzen.","Nudeln + Sauce in Auflaufform mischen. Schmand in Klecksen drauf.","Käse reiben, darüber streuen. Bei 180°C 25 Min. backen."]},"Nudeln mit Gulasch":{"ingredients":["500 g Nudeln","600 g Rindergulasch","2 Zwiebeln","2 Paprika","2 EL Tomatenmark","500 ml Rinderbrühe","2 EL Öl","Paprikapulver","Salz, Pfeffer"],"instructions":["Fleisch in Öl scharf anbraten. Zwiebeln würfeln, zugeben.","Tomatenmark und Paprikapulver einrühren. Brühe aufgießen.","1,5 Std. schmoren. Paprika in Streifen zugeben, weitere 15 Min.","Nudeln kochen, mit Gulasch servieren."]},"Nudeln mit Lachs":{"ingredients":["400 g Nudeln (Tagliatelle)","300 g Lachsfilet","200 ml Sahne","1 Zwiebel","2 EL Butter","Dill","Salz, Pfeffer","Zitronensaft"],"instructions":["Nudeln kochen. Zwiebel in Butter andünsten.","Lachs würfeln, kurz mitbraten.","Sahne zugeben, aufkochen. Dill, Salz, Pfeffer, Zitronensaft zugeben.","Nudeln untermischen, servieren."]},"Pellkartoffeln mit Quark":{"ingredients":["1 kg kleine Kartoffeln (festkochend)","500 g Magerquark","200 ml Milch","1 Bund Schnittlauch","1 Zwiebel","Salz, Pfeffer","Leinöl (optional)"],"instructions":["Kartoffeln waschen, mit Schale in Salzwasser 20 Min. kochen.","Quark mit Milch cremig rühren. Schnittlauch in Röllchen, Zwiebel fein würfeln. Unterheben.","Mit Salz und Pfeffer abschmecken. Kartoffeln pellen, in Quark dippen."]},"Pizza":{"ingredients":["1 Pck. Pizzateig (oder selbstgemacht)","200 ml Tomatenpassata","200 g Mozzarella","Belag nach Wahl (Salami, Schinken, Pilze etc.)","Oregano","Olivenöl"],"instructions":["Teig ausrollen, auf Backblech legen. Passata drauf.","Mozzarella zupfen, verteilen. Belag nach Wahl drauf.","Mit Oregano und Olivenöl toppen. Bei 220°C 12-15 Min. backen."]},"Polofinos":{"ingredients":["500 g Hähnchenbrust","1 Zwiebel","2 Knoblauchzehen","1 rote Paprika","200 g Crème fraîche","200 ml Sahne","2 EL Tomatenmark","Salz, Pfeffer","Paprikapulver","Reis als Beilage"],"instructions":["Hähnchen in Streifen schneiden, scharf anbraten. Herausnehmen.","Zwiebel, Knoblauch, Paprika würfeln, andünsten. Tomatenmark einrühren.","Mit Sahne und Crème fraîche ablöschen, würzen. Hähnchen zurückgeben.","10 Min. köcheln. Mit Reis servieren."]},"Ramennudeln mit Ei":{"ingredients":["4 Pck. Instant-Ramen","4 Eier","2 Frühlingszwiebeln","2 EL Sojasauce","1 TL Sesamöl"],"instructions":["Ramen nach Packung kochen, aber nur halb so viel Wasser.","Eier einzeln in die kochende Suppe schlagen, 3 Min. ziehen lassen.","Mit Sojasauce, Sesamöl, Frühlingszwiebeln servieren."]},"Rührei mit Spinat":{"ingredients":["6 Eier","200 g Blattspinat (TK)","50 ml Milch","1 Zwiebel","2 EL Butter","Salz, Pfeffer","Muskatnuss"],"instructions":["Zwiebel in Butter andünsten. Spinat zugeben, auftauen lassen.","Eier mit Milch verquirlen, salzen, pfeffern.","Eier zum Spinat geben, stocken lassen. Mit Muskat abschmecken."]},"Schupfnudeln mit Geschnetzeltem":{"ingredients":["500 g Schupfnudeln (Kühlregal)","400 g Schweinefilet","200 g Champignons","1 Zwiebel","200 ml Sahne","2 EL Butter","Salz, Pfeffer","Petersilie"],"instructions":["Schupfnudeln in Butter goldbraun braten. Herausnehmen.","Fleisch in Streifen schneiden, scharf anbraten. Zwiebel, Pilze zugeben.","Sahne angießen, würzen, 5 Min. köcheln.","Schupfnudeln wieder zugeben, mit Petersilie servieren."]},"Spagetti Bolognese":{"ingredients":["500 g Spaghetti","400 g Hackfleisch","1 Zwiebel","2 Knoblauchzehen","1 Dose Tomaten (400 g)","2 EL Tomatenmark","100 ml Rotwein (optional)","Italiensiche Kräuter","Salz, Pfeffer","Parmesan"],"instructions":["Zwiebel und Knoblauch andünsten, Hack anbraten.","Tomatenmark einrühren, Tomaten und Wein zugeben.","30 Min. köcheln lassen. Kräuter, Salz, Pfeffer zugeben.","Spaghetti kochen, mit Sauce und Parmesan servieren."]},"Spagetti mit Tomatensauce":{"ingredients":["500 g Spaghetti","1 Dose Tomaten (400 g)","1 Zwiebel","2 Knoblauchzehen","2 EL Olivenöl","Basilikum","Salz, Pfeffer","Parmesan"],"instructions":["Zwiebel, Knoblauch in Olivenöl andünsten. Tomaten zugeben.","20 Min. köcheln. Basilikum, Salz, Pfeffer zugeben.","Spaghetti kochen, mit Sauce und Parmesan servieren."]},"Spiegelei mit Bratkartoffeln":{"ingredients":["4 Eier","1 kg Kartoffeln (gekocht, vom Vortag)","1 Zwiebel","4 EL Öl","Salz, Pfeffer"],"instructions":["Gekochte Kartoffeln in Scheiben schneiden. In Öl knusprig braten.","Zwiebel würfeln, zugeben, mitbraten. Salzen, pfeffern.","In separater Pfanne Spiegeleier braten. Zusammen servieren."]},"Spätzle-Pfanne":{"ingredients":["500 g Spätzle (Kühlregal)","200 g Speckwürfel","1 Zwiebel","200 g Käse (Emmentaler)","2 EL Butter","Salz, Pfeffer","Schnittlauch"],"instructions":["Spätzle in Butter goldbraun braten.","Speck und Zwiebel separat anbraten, zu den Spätzle geben.","Käse reiben, darüber streuen. Mit Schnittlauch servieren."]},"Taccos":{"ingredients":["8 Taco Shells","400 g Hackfleisch","1 Pck. Taco-Gewürzmischung","1 Dose Kidneybohnen","Salat","Tomaten","Käse","Sauerrahm"],"instructions":["Hack anbraten, mit Gewürzmischung und Bohnen mischen.","Taco Shells im Ofen erwärmen.","Salat und Tomaten schnippeln.","Tacos füllen: Hackmix, Salat, Tomaten, Käse, Sauerrahm."]},"Tortellini":{"ingredients":["500 g Tortellini (Kühlregal)","200 ml Sahne","100 g Parmesan","Salz, Pfeffer","Muskatnuss"],"instructions":["Tortellini nach Packung kochen.","Sahne erhitzen, Parmesan reinschmelzen, würzen.","Sauce über Tortellini geben, servieren."]},"Wikingertopf":{"ingredients":["600 g Rindfleisch (Gulasch)","4 Kartoffeln","3 Karotten","1 Zwiebel","2 EL Tomatenmark","500 ml Rinderbrühe","2 EL Öl","Salz, Pfeffer","Lorbeerblatt"],"instructions":["Fleisch in Öl scharf anbraten. Zwiebel würfeln, zugeben.","Tomatenmark einrühren, Brühe aufgießen. 45 Min. schmoren.","Kartoffeln und Karotten würfeln, zugeben. Weitere 30 Min. köcheln.","Mit Salz, Pfeffer, Lorbeer abschmecken."]},"Wraps":{"ingredients":["8 Tortilla-Wraps","400 g Hähnchenbrust","Salat","Tomaten","Gurke","200 g Joghurt","1 Knoblauchzehe","Salz, Pfeffer"],"instructions":["Hähnchen in Streifen braten. Salat, Tomaten, Gurke schneiden.","Joghurt mit Knoblauch, Salz, Pfeffer mischen.","Wraps erwärmen, mit allen Zutaten füllen, einrollen."]}};
+
+        // === APP STATE ===
         const defaultMeals = [
             "Polofinos", "Taccos", "Gemüsesuppe", "Frikassee mit Reis", 
             "Kassler mit Kartoffelklößen, Sauerkraut", "Bratwurst mit Sauerkraut", 
@@ -192,27 +283,28 @@
 
         let meals = JSON.parse(localStorage.getItem('princessMeals')) || [...defaultMeals];
         let currentMeal = "";
-        
-        const container = document.getElementById('tinder-container');
 
-        // --- TINDER LOGIK ---
+        function hasRecipe(name) { return name in recipes; }
+
         function createCard() {
-            container.innerHTML = ''; // Alte Karte löschen
+            const container = document.getElementById('tinder-container');
+            container.innerHTML = '';
             
             if(meals.length === 0) {
                 container.innerHTML = '<div class="tinder-card"><div class="meal-text">Kochbuch ist leer!</div></div>';
                 return;
             }
 
-            // Zufälliges Gericht
             currentMeal = meals[Math.floor(Math.random() * meals.length)];
 
             const card = document.createElement('div');
             card.className = 'tinder-card';
+            const hasData = hasRecipe(currentMeal);
+            const indicator = hasData ? '📖' : '❓';
             card.innerHTML = `
                 <div class="stamp stamp-nope" id="stamp-nope">NÄÄÄ!</div>
                 <div class="stamp stamp-like" id="stamp-like">LECKER!</div>
-                <div class="meal-text">${currentMeal}</div>
+                <div class="meal-text">${indicator} ${currentMeal}</div>
             `;
             container.appendChild(card);
 
@@ -223,24 +315,19 @@
             let startX = 0, currentX = 0, isDragging = false;
             const stampNope = card.querySelector('#stamp-nope');
             const stampLike = card.querySelector('#stamp-like');
-            const threshold = 100; // Wie weit muss gewischt werden
+            const threshold = 100;
 
-            // Pointer Events (Touch & Maus)
             card.addEventListener('pointerdown', (e) => {
                 isDragging = true;
                 startX = e.clientX;
-                card.style.transition = 'none'; // Keine Verzögerung beim Ziehen
+                card.style.transition = 'none';
             });
 
             document.addEventListener('pointermove', (e) => {
                 if (!isDragging) return;
                 currentX = e.clientX - startX;
-                
-                // Karte rotieren und verschieben
                 const rotate = currentX * 0.05;
                 card.style.transform = `translate(${currentX}px, 0) rotate(${rotate}deg)`;
-
-                // Stempel-Opazität anpassen
                 stampLike.style.opacity = currentX > 20 ? currentX / 100 : 0;
                 stampNope.style.opacity = currentX < -20 ? Math.abs(currentX) / 100 : 0;
             });
@@ -250,37 +337,76 @@
                 isDragging = false;
 
                 if (currentX > threshold) {
-                    // Swipe Rechts (Match)
+                    // Swipe Rechts = MATCH → Rezept anzeigen
                     card.style.transition = 'transform 0.4s ease-out';
                     card.style.transform = `translate(${window.innerWidth}px, 0) rotate(30deg)`;
-                    setTimeout(showMatch, 300);
+                    setTimeout(showRecipe, 300);
                 } else if (currentX < -threshold) {
-                    // Swipe Links (Neues Gericht)
+                    // Swipe Links = Weiter
                     card.style.transition = 'transform 0.4s ease-out';
                     card.style.transform = `translate(-${window.innerWidth}px, 0) rotate(-30deg)`;
-                    setTimeout(createCard, 300); // Neue Karte laden
+                    setTimeout(createCard, 300);
                 } else {
-                    // Zurück in die Mitte schnappen
                     card.style.transition = 'transform 0.3s ease-out';
                     card.style.transform = 'translate(0px, 0px) rotate(0deg)';
                     stampLike.style.opacity = 0;
                     stampNope.style.opacity = 0;
                 }
-                currentX = 0; // Reset
+                currentX = 0;
             });
         }
 
-        function showMatch() {
-            document.getElementById('match-meal').innerText = currentMeal;
-            document.getElementById('match-screen').style.display = 'flex';
+        // Button-Hilfen
+        function swipeRight() {
+            const card = document.querySelector('.tinder-card');
+            if (!card) return;
+            card.style.transition = 'transform 0.4s ease-out';
+            card.style.transform = `translate(${window.innerWidth}px, 0) rotate(30deg)`;
+            setTimeout(showRecipe, 300);
+        }
+        function swipeLeft() {
+            const card = document.querySelector('.tinder-card');
+            if (!card) return;
+            card.style.transition = 'transform 0.4s ease-out';
+            card.style.transform = `translate(-${window.innerWidth}px, 0) rotate(-30deg)`;
+            setTimeout(createCard, 300);
         }
 
-        function resetApp() {
-            document.getElementById('match-screen').style.display = 'none';
+        // === RECIPE DISPLAY ===
+        function showRecipe() {
+            document.getElementById('tinder-screen').style.display = 'none';
+            const recipeScreen = document.getElementById('recipe-screen');
+            recipeScreen.style.display = 'flex';
+
+            const recipe = recipes[currentMeal];
+            document.getElementById('recipe-name').textContent = currentMeal;
+
+            if (recipe) {
+                // Zutaten
+                const ingrList = document.getElementById('recipe-ingredients');
+                ingrList.innerHTML = recipe.ingredients.map(i => `<li>${i}</li>`).join('');
+                document.getElementById('recipe-ingredients-section').style.display = 'block';
+
+                // Zubereitung
+                const instrList = document.getElementById('recipe-instructions');
+                instrList.innerHTML = recipe.instructions.map(i => `<li>${i}</li>`).join('');
+                document.getElementById('recipe-instructions-section').style.display = 'block';
+            } else {
+                document.getElementById('recipe-ingredients-section').style.display = 'none';
+                document.getElementById('recipe-instructions-section').style.display = 'none';
+                const instrList = document.getElementById('recipe-instructions');
+                instrList.innerHTML = '<li style="text-align:center; color: var(--accent-pink);">⚠️ Noch kein Rezept hinterlegt. Bald!</li>';
+                document.getElementById('recipe-instructions-section').style.display = 'block';
+            }
+        }
+
+        function backToSwipe() {
+            document.getElementById('recipe-screen').style.display = 'none';
+            document.getElementById('tinder-screen').style.display = 'flex';
             createCard();
         }
 
-        // --- KOCHBUCH EINSTELLUNGEN LOGIK ---
+        // === KOCHBUCH SETTINGS ===
         function saveMeals() {
             localStorage.setItem('princessMeals', JSON.stringify(meals));
             renderList();
@@ -290,8 +416,9 @@
             const listContainer = document.getElementById('list-container');
             listContainer.innerHTML = '';
             meals.forEach((meal, index) => {
-                let li = document.createElement('li');
-                li.innerHTML = `<span>${meal}</span> <button class="del-btn" onclick="removeMeal(${index})">❌</button>`;
+                const li = document.createElement('li');
+                const hasData = hasRecipe(meal);
+                li.innerHTML = `<span>${hasData ? '📖' : '❓'} ${meal}</span> <button class="del-btn" onclick="removeMeal(${index})">❌</button>`;
                 listContainer.appendChild(li);
             });
         }
